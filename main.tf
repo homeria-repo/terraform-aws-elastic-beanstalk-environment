@@ -915,7 +915,7 @@ data "aws_iam_policy_document" "elb_logs" {
     ]
 
     resources = [
-      "arn:aws:s3:::${module.label.id}-eb-loadbalancer-logs/*"
+      "arn:aws:s3:::${module.label.id}-eb-loadbalancer-logs-${random_id.s3_name.hex}/*"
     ]
 
     principals {
@@ -927,9 +927,13 @@ data "aws_iam_policy_document" "elb_logs" {
   }
 }
 
+resource "random_id" "s3_name" {
+  byte_length = 2
+}
+
 resource "aws_s3_bucket" "elb_logs" {
   count         = var.tier == "WebServer" && var.environment_type == "LoadBalanced" ? 1 : 0
-  bucket        = "${module.label.id}-eb-loadbalancer-logs"
+  bucket        = "${module.label.id}-eb-loadbalancer-logs-${random_id.s3_name.hex}"
   acl           = "private"
   force_destroy = var.force_destroy
   policy        = join("", data.aws_iam_policy_document.elb_logs.*.json)
